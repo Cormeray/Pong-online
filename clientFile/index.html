@@ -48,8 +48,6 @@
                 });
                 socket.on('launch',function(msg){
                     score.clear();
-                    terrain.clear();
-                    movableEle.clear();
                     score.writeText("Pressez n'importe quelle touche pour jouer",150,300,20);
                 });
                 socket.on('render',function(fileData){
