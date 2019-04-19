@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+    <header>
+            <title>Pong</title>
+            <script src="/display"></script>
+            <script src="/keycode"></script>
+    </header>
+    <body>
+        <div>
+            <canvas id="terrain" style="z-index: 0; position: absolute;"></canvas>
+            <canvas id="score" style="z-index: 1; position: absolute;"></canvas>
+            <canvas id="joueursetballe" style="z-index: 2; position: absolute;"></canvas>
+        </div>
+    </body>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            let terrain;
+            let movableEle;
+            let score;
+            let socket;
+            let end = true;
+            let gameControls = {
+                goUp:false,
+                goDown:false
+            };
+            window.onload =()=>{
+                let onKeyDown = function(event){
+                if ( event.keyCode == keycode.KEYDOWN ) { 
+                    gameControls.goDown = true;
+                } else if ( event.keyCode == keycode.KEYUP ) { 
+                    gameControls.goUp = true;
+                }
+                };
+                let onKeyUp = function(event){
+                    if ( event.keyCode == keycode.KEYDOWN ) { 
+                        gameControls.goDown = false;
+                    } else if ( event.keyCode == keycode.KEYUP ) { 
+                        gameControls.goUp = false;
+                    }
+                };
+                terrain = new Terrain(700,400);
+                movableEle = new MovableElements(700,400);
+                score = new WriteText(700,400);
+                socket = io();
+                socket.on('wait',function(msg){
+                    score.clear();
+                    score.writeText("En attente d'un autre joueur",200,200,20);
+                });
+                socket.on('launch',function(msg){
+                    score.clear();
+                    terrain.clear();
+                    movableEle.clear();
+                    score.writeText("Pressez n'importe quelle touche pour jouer",150,300,20);
+                });
+                socket.on('render',function(fileData){
+                    if(end){
+                        end = false;
+                    }
+                    score.clear();
+                    score.writeText(fileData.player1.score+"  -  "+fileData.player2.score,300,30,40);
+                    movableEle.clear();
+                    movableEle.drawJoueur(fileData.player1.posX,fileData.player1.posY,fileData.player1.width,fileData.player1.height);
+                    movableEle.drawJoueur(fileData.player2.posX,fileData.player2.posY,fileData.player2.width,fileData.player2.height);
+                    movableEle.drawBall(fileData.ball.posX,fileData.ball.posY,fileData.ball.size);
+                });
+                socket.on('gameEnd',function(fileData){
+                    score.clear();
+                    movableEle.clear();
+                    score.writeText(fileData.player1.score+"  -  "+fileData.player2.score,300,100,40);
+                    score.writeText(`Victoire du ${(fileData.player1.score>fileData.player2.score)?"Joueur 1":"Joueur 2"}`,250,200,20);
+                    score.writeText("Pressez n'importe quelle touche pour rejouer",150,300,20);
+                    end = true;
+                });
+                terrain.drawTerrain();
+                window.onkeydown = (event)=>{
+                    if(end){
+                        socket.emit('ready',{});
+                        end = false;
+                    }
+                    else{
+                        onKeyDown(event);
+                        socket.emit('moveData',gameControls);
+                    }
+                }
+                window.onkeyup = (event)=>{onKeyUp(event);socket.emit('moveData',gameControls)}
+            }
+        </script>
+</html>

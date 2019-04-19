@@ -1,5 +1,5 @@
-import { Game } from "./Game";
-import { Info } from "./Info";
+import { Game } from "./GameData/Game";
+import { Info } from "./GameData/Info";
 const express = require('express');
 const app = express();
 const path = require('path');
@@ -7,15 +7,15 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
 app.get('/',function(req : any,res : any){
-    res.sendFile(path.join(__dirname,'index.html'));
+    res.sendFile(path.join(__dirname,'./clientFile/index.html'));
 });
 
 app.get('/display',function(req : any,res : any){
-    res.sendFile(path.join(__dirname,'gameClient.js'));
+    res.sendFile(path.join(__dirname,'./clientFile/gameClient.js'));
 });
 
 app.get('/keycode',function(req : any,res : any){
-    res.sendFile(path.join(__dirname,'game.keycode.js'));
+    res.sendFile(path.join(__dirname,'./clientFile/game.keycode.js'));
 });
 
 

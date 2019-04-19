@@ -1,12 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var Game_1 = require("./Game");
-var Info_1 = require("./Info");
+var Game_1 = require("./GameData/Game");
+var Info_1 = require("./GameData/Info");
 var express = require('express');
 var app = express();
 var path = require('path');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+app.get('/', function (req, res) {
+    res.sendFile(path.join(__dirname, './clientFile/index.html'));
+});
+app.get('/display', function (req, res) {
+    res.sendFile(path.join(__dirname, './clientFile/gameClient.js'));
+});
+app.get('/keycode', function (req, res) {
+    res.sendFile(path.join(__dirname, './clientFile/game.keycode.js'));
+});
 var player1;
 var player2;
 var game = new Game_1.Game();
@@ -48,23 +57,12 @@ var play = function () {
         io.emit('gameEnd', game);
     }
 };
-app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-app.get('/display', function (req, res) {
-    res.sendFile(path.join(__dirname, 'gameClient.js'));
-});
-app.get('/keycode', function (req, res) {
-    res.sendFile(path.join(__dirname, 'game.keycode.js'));
-});
 io.on('connection', function (socket) {
     if (!game.player1.find) {
         player1 = socket;
         player1.emit('launch', {});
-        //game.player1.ready = false;
         game.player1.find = true;
         player1.on('disconnect', function (msg) {
-            //game.player1.ready=false;
             game.player1.find = false;
             player1.disconnect(true);
         });
@@ -93,12 +91,9 @@ io.on('connection', function (socket) {
         player2 = socket;
         game.player2.find = true;
         player2.emit('launch', {});
-        //game.player2.ready = false;
         player2.on('disconnect', function (msg) {
-            //game.player2.ready=false;
             game.player2.find = false;
             player2.disconnect(true);
-            //player2=undefined;
         });
         player2.on('moveData', function (data) {
             if (data && data.goUp !== undefined) {
